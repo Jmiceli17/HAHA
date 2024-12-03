@@ -107,7 +107,7 @@ def get_bc_and_human_proxy(args, epochs=300):
             bc, human_proxy = bct.get_agents()
         bcs[layout_name] = [bc]
         human_proxies[layout_name] = [human_proxy]
-
+    
     args.layout_names = all_layouts
     return bcs, human_proxies
 
@@ -160,7 +160,7 @@ def get_fcp_population(args, training_steps=2e7):
         agents = []
         num_layers = 2
         for use_fs in [True]:#[False, True]:
-            for seed, h_dim in [(2907, 64), (2907, 256)]:  #(105, 64), (105, 256),# [8,16], [32, 64], [128, 256], [512, 1024]
+            for seed, h_dim in [(14, 64), (13, 256)]:  #(105, 64), (105, 256),# [8,16], [32, 64], [128, 256], [512, 1024]
                 ck_rate = training_steps // 10
                 # name = f'cnn_{num_layers}l_' if use_cnn else f'eval_{num_layers}l_'
                 name = 'fcp_sp'
@@ -230,7 +230,7 @@ def get_hrl_agent(args, teammate_types='bcp', training_steps=2e8, seed=100, num_
     """
     name = f'HAHA_{teammate_types}_{seed}'
     # Get worker
-    worker = get_hrl_worker(args, teammate_types, seed=seed)#, training_steps=15e6)
+    worker = get_hrl_worker(args, teammate_types, seed=seed, training_steps=training_steps)
     # Get teammates
     if teammate_types == 'bcp':
         teammates, _ = get_bc_and_human_proxy(args)
@@ -246,7 +246,7 @@ def get_hrl_agent(args, teammate_types='bcp', training_steps=2e8, seed=100, num_
     # from timeit import timeit
     # print(timeit(lambda: worker_trainer.train_agents(training_steps_per_agent_per_iter), number=1))
     # cProfile.runctx('worker_trainer.train_agents(training_steps_per_agent_per_iter)', None, locals(), sort='cumtime')
-    manager_trainer.train_agents(2e8)
+    manager_trainer.train_agents(train_timesteps=args.training_steps)
 
     hrl = HierarchicalRL(worker, manager_trainer.learning_agent, args, name=name)
     hrl.save(Path(Path(args.base_dir / 'agent_models' / hrl.name / args.exp_name)))
@@ -268,7 +268,21 @@ def get_all_agents(args, training_steps=1e7, agents_to_train='all'):
 
 if __name__ == '__main__':
     args = get_arguments()
-    get_selfplay_agent(args, training_steps=2e8)
+    two_chefs_layouts = [
+        'selected_2_chefs_coordination_ring',
+        'selected_2_chefs_counter_circuit',
+        'selected_2_chefs_cramped_room'
+        # 'selected_2_chefs_double_counter_circuit',
+        # 'selected_2_chefs_secret_coordination_ring',
+        # 'selected_2_chefs_spacious_room_few_resources',
+        # 'selected_2_chefs_spacious_room_no_counter_space',
+        # 'selected_2_chefs_storage_room'
+    ]
+
+    args.layout_names = two_chefs_layouts
+
+    args.n_envs = 200
+    # get_selfplay_agent(args, training_steps=2e8)
     #print('GOT SP', flush=True)
     # get_bc_and_human_proxy(args, epochs=2)
     # print('GOT BC&HP', flush=True)
@@ -278,7 +292,12 @@ if __name__ == '__main__':
     # print('GOT FCP', flush=True)
     #get_hrl_worker(args, teammate_type='bcp', training_steps=1e8, seed=1811)
     #print('GOT WORK', flush=True)
-    #get_hrl_agent(args, teammate_types='bcp', training_steps=2e8, seed=1811)
+    
+    how_long = 6
+    args.training_steps = int(5e6 * how_long)
+    N_X_SP_seed = 1010
+    # Can't use 'bcp' because don't have human dataset
+    get_hrl_agent(args, teammate_types='fcp', training_steps=args.training_steps, seed=N_X_SP_seed)
     #print('GOT HAHA', flush=True)
 
     # get_bc_and_human_proxy(args)
