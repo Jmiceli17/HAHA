@@ -23,21 +23,24 @@ if __name__ == "__main__":
 
     args = get_arguments(additional_args)
 
-    args.layout = 'counter_circuit_o_1order'
+    args.layout = 'selected_2_chefs_coordination_ring'
     args.p_idx = 1
 
     # bc, human_proxy = BehavioralCloningTrainer.load_bc_and_human_proxy(args, name=f'bc_{args.layout}')
     # agent, tm = bc, human_proxy
     # teammate = bc
-    # worker = load_agent(Path('agent_models/worker_bcp/'), args)
-    # tm = load_agent(Path('agent_models/HAHA_bcp_bcp'), args)
-    # agent = HumanManagerHRL(worker, args)
+    worker = load_agent(Path('agent_models/worker_fcp_1010/'), args)
+    manager = load_agent(Path('agent_models/manager_fcp_1010/'), args)  # What is difference between manager_fcp_1010 and HAHA_fcp_1010/manager?
+    # agent = HumanManagerHRL(worker, args)   # Human plays as the manager and assigns tasks to the agent
 
+    tm = HierarchicalRL(worker, manager, args)
 
-    tm = load_agent(Path('agent_models_ICML/HAHA_fcp_219'), args)# 'human'# HumanManagerHRL(haha.worker, args)
+    # tm = load_agent(Path('agent_models/manager_fcp_1010/'), args)# 'human'# HumanManagerHRL(haha.worker, args)
     # tm = load_agent(Path('agent_models_ICML/fcp_1811'), args)# 'human'# HumanManagerHRL(haha.worker, args)
 
-    agent = 'human'#load_agent(Path('agent_models_ICML/HAHA_fcp_61'), args)#load_agent(Path('agent_models/HAHA_fcp_fcp'), args)
+    # agent = 'human'#load_agent(Path('agent_models_ICML/HAHA_fcp_61'), args)#load_agent(Path('agent_models/HAHA_fcp_fcp'), args)
+
+    agent = 'human'
 
     t_idx = 1 - args.p_idx
     # teammate = DummyAgent('random')# load_agent(Path(args.teammate), args)
@@ -49,6 +52,6 @@ if __name__ == "__main__":
     #     agent.set_idx(args.p_idx, args.layout, is_haha=isinstance(agent, HierarchicalRL), tune_subtasks=False)
 
     dc = OvercookedGUI(args, agent=agent, teammate=tm, layout_name=args.layout, p_idx=args.p_idx, fps=10,
-                       horizon=100)
+                       horizon=400)
     dc.on_execute()
     print(dc.trajectory)
